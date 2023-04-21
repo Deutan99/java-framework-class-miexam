@@ -18,6 +18,7 @@ public class DaoFactory {
     private String username;
     @Value("${db.password}")
     private String password;
+    private DataSource dataSource;
 
     @Bean
     public UserDao userDao() {

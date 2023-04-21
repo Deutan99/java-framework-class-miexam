@@ -4,30 +4,34 @@ import javax.sql.DataSource;
 import java.sql.*;
 
 public class UserDao {
-    private final DataSource connectionMaker;
+
+    private final DataSource dataSource;
+
 
     public UserDao(DataSource dataSource) {
-        this.connectionMaker = dataSource;
+        this.dataSource = dataSource;
     }
 
-    public User get(Long id) throws ClassNotFoundException, SQLException {
+    public User get(Long id) throws SQLException {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
-        User user;
+        User user = null;
         try {
-            connection = connectionMaker.getConnection();
+            connection = dataSource.getConnection();
             preparedStatement = connection.prepareStatement("select id, name, password from userinfo where id = ?");
 
             preparedStatement.setLong(1, id);
 
             resultSet = preparedStatement.executeQuery();
-            resultSet.next();
 
-            user = new User();
-            user.setId(resultSet.getLong("id"));
-            user.setName(resultSet.getString("name"));
-            user.setPassword(resultSet.getString("password"));
+            if(resultSet.next()) {
+                user = new User();
+                user.setId(resultSet.getLong("id"));
+                user.setName(resultSet.getString("name"));
+                user.setPassword(resultSet.getString("password"));
+            }
+
         } finally {
             try {
                 resultSet.close();
@@ -49,13 +53,13 @@ public class UserDao {
         return user;
     }
 
-    public void insert(User user) throws ClassNotFoundException, SQLException {
+    public void insert(User user) throws SQLException {
 
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         try {
-            connection = connectionMaker.getConnection();
+            connection = dataSource.getConnection();
 
             preparedStatement = connection.prepareStatement("insert into userinfo (name, password) values (?,?)", Statement.RETURN_GENERATED_KEYS);
             preparedStatement.setString(1, user.getName());
@@ -86,4 +90,53 @@ public class UserDao {
 
     }
 
+    public void update(User user) throws SQLException {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = dataSource.getConnection();
+
+            preparedStatement = connection.prepareStatement("update userinfo set name = ?, password = ? where id = ?");
+            preparedStatement.setString(1, user.getName());
+            preparedStatement.setString(2, user.getPassword());
+            preparedStatement.setLong(3, user.getId());
+            preparedStatement.executeUpdate();
+
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                preparedStatement.close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public void delete(Long id) throws SQLException {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = dataSource.getConnection();
+
+            preparedStatement = connection.prepareStatement("delete from userinfo where id = ?");
+            preparedStatement.setLong(1, id);
+            preparedStatement.executeUpdate();
+
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                preparedStatement.close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 }
