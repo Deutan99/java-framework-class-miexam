@@ -1,12 +1,13 @@
 package kr.ac.jejunu.user;
 
+import javax.sql.DataSource;
 import java.sql.*;
 
 public class UserDao {
-    private final ConnectionMaker connectionMaker;
+    private final DataSource connectionMaker;
 
-    public UserDao(ConnectionMaker connectionMaker) {
-        this.connectionMaker = connectionMaker;
+    public UserDao(DataSource dataSource) {
+        this.connectionMaker = dataSource;
     }
 
     public User get(Long id) throws ClassNotFoundException, SQLException {
